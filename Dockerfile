@@ -18,6 +18,13 @@ FROM nginx:alpine
 # Copiar archivos estáticos
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# Script de inicio que configura el puerto dinámico de Railway
+RUN echo '#!/bin/sh' > /start.sh && \
+    echo 'PORT=${PORT:-80}' >> /start.sh && \
+    echo 'sed -i "s/listen 80;/listen $PORT;/g" /etc/nginx/conf.d/default.conf' >> /start.sh && \
+    echo 'nginx -g "daemon off;"' >> /start.sh && \
+    chmod +x /start.sh
+
 # Configuración de nginx para SPA
 RUN echo 'server { \
     listen 80; \
@@ -30,4 +37,4 @@ RUN echo 'server { \
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/start.sh"]
